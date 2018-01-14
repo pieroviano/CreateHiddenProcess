@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2005
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateHiddenProcess", "CreateHiddenProcess\CreateHiddenProcess.csproj", "{4EFD6D5F-3BA1-460F-8F99-E5284C30DD92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateHiddenProcessLib", "CreateHiddenProcessLib\CreateHiddenProcessLib.csproj", "{463A9F82-0ADF-4B61-9C92-1A16C24F63F3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4EFD6D5F-3BA1-460F-8F99-E5284C30DD92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EFD6D5F-3BA1-460F-8F99-E5284C30DD92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EFD6D5F-3BA1-460F-8F99-E5284C30DD92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EFD6D5F-3BA1-460F-8F99-E5284C30DD92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{463A9F82-0ADF-4B61-9C92-1A16C24F63F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{463A9F82-0ADF-4B61-9C92-1A16C24F63F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{463A9F82-0ADF-4B61-9C92-1A16C24F63F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{463A9F82-0ADF-4B61-9C92-1A16C24F63F3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2FD52DBF-E03C-4B7B-B47B-5EDEE876D064}
+	EndGlobalSection
+EndGlobal
