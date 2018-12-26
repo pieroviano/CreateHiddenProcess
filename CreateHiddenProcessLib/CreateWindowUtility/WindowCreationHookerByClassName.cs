@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using CreateHiddenProcessLib.CreateWindowUtility.Delegates;
 using CreateHiddenProcessLib.CreateWindowUtility.Model;
 using CreateHiddenProcessLib.CreateWindowUtility.Win32;
 
 namespace CreateHiddenProcessLib.CreateWindowUtility
 {
-    public class WindowCreationHookerByClassName: IDisposable
+    public class WindowCreationHookerByClassName : IDisposable
     {
-        private static WindowCreationHookerByClassName _instance;
-        private string[] _windowclass;
         private static WindowHookNet _getWindowHookNet;
+        private string[] _windowclass;
+
+        public Thread Thread => _getWindowHookNet?.Thread;
+
+        public void Dispose()
+        {
+            _getWindowHookNet?.Dispose();
+            _getWindowHookNet = null;
+        }
 
         private static bool EvaluateCondition(ByRef<int> ffProcessId, uint processId)
         {
@@ -22,21 +30,22 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
             return ffProcessId?.Value == null || processId == ffProcessId.Value.Id;
         }
 
+        ~WindowCreationHookerByClassName()
+        {
+            _getWindowHookNet?.Dispose();
+        }
+
         public event EventHandler<WindowHookEventArgs> FirefowWindowCreated;
 
         public static WindowCreationHookerByClassName GetInstance(params string[] classes)
         {
-            if (_instance == null)
-            {
-                _instance = new WindowCreationHookerByClassName();
-            }
-            _instance._windowclass = classes;
-            return _instance;
+            var instance = new WindowCreationHookerByClassName {_windowclass = classes};
+            return instance;
         }
 
         private static WindowHookNet GetWindowHookNet(WindowHookDelegate windowHookNetWindowCreated)
         {
-            _getWindowHookNet = new WindowHookNet();
+            _getWindowHookNet = new WindowHookNet("WindowHookNet" + DateTime.Now.ToString("HH:mm:ss mmm"));
             _getWindowHookNet.WindowCreated += windowHookNetWindowCreated;
             return _getWindowHookNet;
         }
@@ -87,17 +96,6 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
             }
 
             return GetWindowHookNet(WindowHookNetWindowCreated);
-        }
-
-        public void Dispose()
-        {
-            _getWindowHookNet?.Dispose();
-            _getWindowHookNet = null;
-        }
-
-        ~WindowCreationHookerByClassName()
-        {
-            _getWindowHookNet?.Dispose();
         }
     }
 }

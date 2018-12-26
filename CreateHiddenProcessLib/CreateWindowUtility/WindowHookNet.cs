@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using CreateHiddenProcessLib.CreateWindowUtility.Delegates;
 using CreateHiddenProcessLib.CreateWindowUtility.Model;
-using CreateHiddenProcessLib.CreateWindowUtility.Win32;
+using CreateHiddenProcessLib.Utility;
 
 namespace CreateHiddenProcessLib.CreateWindowUtility
 {
@@ -13,13 +11,9 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
     ///     allows you to get information about the creation and /or the destruction of
     ///     windows
     /// </summary>
-    public class WindowHookNet: IDisposable
+    public class WindowHookNet : WindowHookNetBase
     {
-        private const int MaxTitle = 255;
-
         private readonly List<WindowHookEventArgs> _eventsToFire = new List<WindowHookEventArgs>();
-
-        private readonly Thread _iThread;
 
         private readonly Dictionary<IntPtr, WindowHookEventArgs> _newWindowList =
             new Dictionary<IntPtr, WindowHookEventArgs>();
@@ -27,44 +21,14 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
         private readonly Dictionary<IntPtr, WindowHookEventArgs> _oldWindowList =
             new Dictionary<IntPtr, WindowHookEventArgs>();
 
-        private bool _iRun;
-
-        public WindowHookNet()
+        public WindowHookNet(string threadName)
         {
+            _isNotDisposed = false;
             ThreadStart tStart = Run;
-            _iThread = new Thread(tStart);
+            Thread = new Thread(tStart) {Name = threadName};
         }
 
-        private void EnumerateWindows()
-        {
-            EnumDelegate enumfunc = EnumWindowsProc;
-            var hDesktop = IntPtr.Zero; // current desktop
-            var success = Win32Interop.EnumDesktopWindows(hDesktop, enumfunc, IntPtr.Zero);
-
-            if (!success)
-            {
-                // Get the last Win32 error code
-                var errorCode = Marshal.GetLastWin32Error();
-
-                var errorMessage = $"EnumDesktopWindows failed with code {errorCode}.";
-                throw new Exception(errorMessage);
-            }
-        }
-
-        private bool EnumWindowsProc(IntPtr hWnd, int lParam)
-        {
-            var tArgument = new WindowHookEventArgs
-            {
-                Handle = hWnd,
-                WindowTitle = GetWindowText(hWnd),
-                WindowClass = GetClassName(hWnd)
-            };
-
-
-            _newWindowList.Add(tArgument.Handle, tArgument);
-            return true;
-        }
-
+        public Thread Thread { get; set; }
 
         private void FireClosedWindows()
         {
@@ -112,48 +76,14 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
             }
         }
 
-        public static string GetClassName(IntPtr hWnd)
-        {
-            var title = new StringBuilder(MaxTitle);
-            var titleLength = Win32Interop.GetClassName(hWnd, title, title.Capacity + 1);
-            title.Length = titleLength;
-
-            return title.ToString();
-        }
-
-        /// <summary>
-        ///     Returns the caption of a window by given HWND identifier.
-        /// </summary>
-        public static string GetWindowText(IntPtr hWnd)
-        {
-            var title = new StringBuilder(MaxTitle);
-            var titleLength = Win32Interop.GetWindowText(hWnd, title, title.Capacity + 1);
-            title.Length = titleLength;
-
-            return title.ToString();
-        }
-
-        private event WindowHookDelegate InnerWindowCreated;
-        private event WindowHookDelegate InnerWindowDestroyed;
-
-        private void OnWindowCreated(WindowHookEventArgs aArgs)
-        {
-            InnerWindowCreated?.Invoke(this, aArgs);
-        }
-
-        private void OnWindowDestroyed(WindowHookEventArgs aArgs)
-        {
-            InnerWindowDestroyed?.Invoke(this, aArgs);
-        }
-
         private void Run()
         {
             try
             {
-                while (_iRun)
+                while (_isNotDisposed)
                 {
                     _newWindowList.Clear();
-                    EnumerateWindows();
+                    WindowUtility.EnumerateWindows(_newWindowList);
                     // if the hook has been freshly installed
                     // simply copy the new list to the "old" one
                     if (0 == _oldWindowList.Count)
@@ -168,7 +98,6 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
                         FireClosedWindows();
                         FireCreatedWindows();
                     }
-                    Thread.Sleep(500);
                 }
 
                 // if the hook has been uninstalled
@@ -177,45 +106,38 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
                 // lot of events for windows that where already there
 
                 _oldWindowList.Clear();
+                Thread = null;
             }
             catch (Exception aException)
             {
                 Console.Out.WriteLine("exception in thread:" + aException);
             }
-        }
-
-        public void Shutdown()
-        {
-            if (_iRun)
-            {
-                _iRun = false;
-            }
+            Thread = null;
         }
 
         /// <summary>
         ///     register to this event if you want to be informed about
         ///     the creation of a window
         /// </summary>
-        public event WindowHookDelegate WindowCreated
+        public override event WindowHookDelegate WindowCreated
         {
             add
             {
-                InnerWindowCreated += value;
-                if (!_iRun)
+                base.WindowCreated += value;
+                if (!_isNotDisposed)
                 {
-                    _iRun = true;
-                    _iThread.Start();
+                    _isNotDisposed = true;
+                    Thread.Start();
                 }
             }
             remove
             {
-                InnerWindowCreated -= value;
+                base.WindowCreated -= value;
 
                 // if no more listeners for the events
-                if (null == InnerWindowCreated &&
-                    null == InnerWindowDestroyed)
+                if (!IsAttachedAnyHandler)
                 {
-                    _iRun = false;
+                    _isNotDisposed = false;
                 }
             }
         }
@@ -224,40 +146,26 @@ namespace CreateHiddenProcessLib.CreateWindowUtility
         ///     register to this event, if you want to be informed about
         ///     the destruction of a window
         /// </summary>
-        public event WindowHookDelegate WindowDestroyed
+        public override event WindowHookDelegate WindowDestroyed
         {
             add
             {
-                InnerWindowDestroyed += value;
-                if (!_iRun)
+                base.WindowDestroyed += value;
+                if (!_isNotDisposed)
                 {
-                    _iRun = true;
-                    _iThread.Start();
+                    _isNotDisposed = true;
+                    Thread.Start();
                 }
             }
             remove
             {
-                InnerWindowDestroyed -= value;
+                base.WindowDestroyed -= value;
 
                 // if no more listeners for the events
-                if (null == InnerWindowCreated &&
-                    null == InnerWindowDestroyed)
+                if (!IsAttachedAnyHandler)
                 {
-                    _iRun = false;
+                    _isNotDisposed = false;
                 }
-            }
-        }
-
-        public void Dispose()
-        {
-            Shutdown();
-        }
-
-        ~WindowHookNet()
-        {
-            if (_iRun)
-            {
-                Shutdown();
             }
         }
     }

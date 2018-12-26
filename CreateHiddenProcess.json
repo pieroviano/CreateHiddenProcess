@@ -1,0 +1,6 @@
+﻿{
+  "appSettings": {
+    "ConfigurationName": "Release",
+    "ProjectsToInclude": "CreateHiddenProcessLib.csproj"
+  }
+}

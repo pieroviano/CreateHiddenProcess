@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CreateHiddenProcessLib</RootNamespace>
     <AssemblyName>CreateHiddenProcessLib</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,9 +47,12 @@
     <Compile Include="CreateWindowUtility\Model\ByRef.cs" />
     <Compile Include="CreateWindowUtility\Model\WindowHookEventArgs.cs" />
     <Compile Include="CreateWindowUtility\Win32\Win32Interop.cs" />
+    <Compile Include="CreateWindowUtility\Win32\WindowTextUtility.cs" />
     <Compile Include="CreateWindowUtility\WindowCreationHookerByClassName.cs" />
     <Compile Include="CreateWindowUtility\WindowHookNet.cs" />
+    <Compile Include="CreateWindowUtility\WindowHookNetBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility\WindowUtility.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
